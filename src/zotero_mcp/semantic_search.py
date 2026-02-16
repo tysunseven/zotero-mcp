@@ -651,6 +651,9 @@ class ZoteroSemanticSearch:
         documents = []
         metadatas = []
         ids = []
+        # Keep payloads below stricter OpenAI-compatible embedding limits.
+        # This is a char-based guard (not token-accurate) but prevents common over-length failures.
+        max_embed_chars = 6000
 
         for item in items:
             try:
@@ -668,6 +671,9 @@ class ZoteroSemanticSearch:
                 if not doc_text.strip():
                     stats["skipped"] += 1
                     continue
+
+                if len(doc_text) > max_embed_chars:
+                    doc_text = doc_text[:max_embed_chars]
 
                 documents.append(doc_text)
                 metadatas.append(metadata)

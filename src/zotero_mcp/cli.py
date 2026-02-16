@@ -13,6 +13,27 @@ from pathlib import Path
 from zotero_mcp.server import mcp
 
 
+def _configure_console_output():
+    """
+    Make CLI output robust on Windows code pages (e.g., cp936/gbk).
+    Replace unencodable characters instead of raising UnicodeEncodeError.
+    """
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(errors="replace")
+    except Exception:
+        pass
+
+    try:
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(errors="replace")
+    except Exception:
+        pass
+
+
+_configure_console_output()
+
+
 def obfuscate_sensitive_value(value, keep_chars=4):
     """Obfuscate sensitive values by showing only the first few characters."""
     if not value or not isinstance(value, str):
@@ -608,7 +629,8 @@ def main():
         # Ensure environment is initialized (Claude config or standalone config)
         setup_zotero_environment()
         if transport == "stdio":
-            mcp.run(transport="stdio")
+            # Stdio MCP must keep stdout clean for JSON-RPC frames.
+            mcp.run(transport="stdio", show_banner=False)
         elif transport == "streamable-http":
             host = getattr(args, "host", "localhost")
             port = getattr(args, "port", 8000)

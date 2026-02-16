@@ -1,0 +1,328 @@
+[INFO] Debug session started: 2026-02-14T14:41:37.1809803+08:00
+[INFO] Log file: C:\Users\28613\Documents\GitHub\zotero-mcp\debug\run-20260214-144137.log
+
+[STEP] Preflight checks 2026-02-14T14:41:48.3405791+08:00
+[CMD] Get-Process zotero
+
+[CMD] Activate venv + zotero-mcp version
+Zotero MCP v0.1.2
+
+[STEP] Check active config 2026-02-14T14:42:05.6503845+08:00
+[CMD] Show config file: C:\Users\28613\.config\zotero-mcp\config.json
+{
+  "semantic_search": {
+    "embedding_model": "openai",
+    "embedding_config": {
+      "model_name": "text-embedding-3-large",
+      "api_key": "sk-360a20af07c34b0fb8619d9646037fc2",
+      "base_url": "https://right.codes/codex/v1"
+    },
+    "update_config": {
+      "auto_update": false,
+      "update_frequency": "manual",
+      "last_update": "2026-02-14T11:25:20.234229",
+      "update_days": 7
+    },
+    "extraction": {
+      "pdf_max_pages": 50
+    }
+  }
+}
+[CMD] setup-info with forced OpenAI env
+=== Zotero MCP Setup Information ===
+
+Traceback (most recent call last):
+  File "C:\Users\28613\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "C:\Users\28613\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\Scripts\zotero-mcp.exe\__main__.py", line 5, in <module>
+    sys.exit(main())
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\src\zotero_mcp\cli.py", line 271, in main
+    print("\U0001f527 Installation Details:")
+UnicodeEncodeError: 'gbk' codec can't encode character '\U0001f527' in position 0: illegal multibyte sequence
+
+[STEP] Ensure clean chroma dir 2026-02-14T14:42:32.6107038+08:00
+[CMD] Test-Path C:\Users\28613\.config\zotero-mcp\chroma_db
+[INFO] Exists=False
+[INFO] Final Exists=False
+
+[STEP] Phase A - metadata-only smoke test (OpenAI) 2026-02-14T14:42:50.4581846+08:00
+[CMD] zotero-mcp update-db --limit 20 --force-rebuild
+C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\chromadb\api\types.py:939: DeprecationWarning: The class OpenAIEmbeddingFunction does not implement get_config(). This will be required in a future version.
+  or self.get_config() is NotImplemented
+Error updating database: Zotero API connection error: [WinError 10061] ����Ŀ�����������ܾ����޷����ӡ�
+Using configuration: C:\Users\28613\.config\zotero-mcp\config.json
+Starting database update...
+
+Database update completed:
+- Total items: 0
+- Processed: 0
+- Added: 0
+- Updated: 0
+- Skipped: 0
+- Errors: 0
+- Duration: 0:00:04.182662
+Error: Zotero API connection error: [WinError 10061] ����Ŀ�����������ܾ����޷����ӡ�
+
+[STEP] Phase B - fulltext smoke test (OpenAI) 2026-02-14T14:43:29.8810198+08:00
+[CMD] zotero-mcp update-db --fulltext --limit 20 --force-rebuild
+ChromaDB: Collection exists with different embedding function: default vs openai
+Scanning local Zotero database for items...
+Found 20 candidate items.
+Extracting content...
+Total items to index: 20
+Processed: 10/20 added:20 skipped:0 errors:0
+Processed: 20/20 added:20 skipped:0 errors:0
+Using configuration: C:\Users\28613\.config\zotero-mcp\config.json
+Starting database update...
+Note: --fulltext flag enabled. Will extract content from local database if available.
+
+Database update completed:
+- Total items: 20
+- Processed: 20
+- Added: 20
+- Updated: 0
+- Skipped: 0
+- Errors: 0
+- Duration: 0:03:21.654463
+
+[STEP] Inspect db status/path 2026-02-14T14:47:15.5059315+08:00
+[CMD] zotero-mcp db-status
+ChromaDB: Collection exists with different embedding function: default vs openai
+=== Semantic Search Database Status ===
+Collection: zotero_library
+Document count: 20
+Embedding model: openai
+Database path: C:\Users\28613\.config\zotero-mcp\chroma_db
+
+Update configuration:
+- Auto update: False
+- Frequency: manual
+- Last update: 2026-02-14T14:46:55.597235
+- Should update: False
+
+[STEP] Inspect chroma_db files 2026-02-14T14:47:31.1271396+08:00
+
+FullName                                                                                         Length
+--------                                                                                         ------
+C:\Users\28613\.config\zotero-mcp\chroma_db\09655ff7-4c08-41aa-b679-ce86a25254e2                 
+C:\Users\28613\.config\zotero-mcp\chroma_db\chroma.sqlite3                                       1843200
+C:\Users\28613\.config\zotero-mcp\chroma_db\09655ff7-4c08-41aa-b679-ce86a25254e2\data_level0.bin 167600
+C:\Users\28613\.config\zotero-mcp\chroma_db\09655ff7-4c08-41aa-b679-ce86a25254e2\header.bin      100
+C:\Users\28613\.config\zotero-mcp\chroma_db\09655ff7-4c08-41aa-b679-ce86a25254e2\length.bin      400
+C:\Users\28613\.config\zotero-mcp\chroma_db\09655ff7-4c08-41aa-b679-ce86a25254e2\link_lists.bin  0
+
+
+
+[STEP] Patched chroma_client binding logic 2026-02-14T14:48:04.8960370+08:00
+[CMD] git diff -- src/zotero_mcp/chroma_client.py
+diff --git a/src/zotero_mcp/chroma_client.py b/src/zotero_mcp/chroma_client.py
+index 8e31f45..9d5806e 100644
+--- a/src/zotero_mcp/chroma_client.py
++++ b/src/zotero_mcp/chroma_client.py
+@@ -172,25 +172,15 @@ class ChromaClient:
+             # Set up embedding function
+             self.embedding_function = self._create_embedding_function()
+ 
+-            # Get or create collection with embedding function handling
++            # Always bind this client's embedding function to collection operations.
++            # Without this, get_collection() may expose a default embedding function
++            # and accidentally override the intended OpenAI/Gemini configuration.
+             try:
+-                # Try to get existing collection first
+-                self.collection = self.client.get_collection(name=self.collection_name)
+-
+-                # Check if embedding functions are compatible
+-                existing_ef = getattr(self.collection, '_embedding_function', None)
+-                if existing_ef is not None:
+-                    existing_name = getattr(existing_ef, 'name', lambda: 'default')()
+-                    new_name = getattr(self.embedding_function, 'name', lambda: 'default')()
+-
+-                    if existing_name != new_name:
+-                        # Log to stderr instead of letting ChromaDB print to stdout
+-                        sys.stderr.write(f"ChromaDB: Collection exists with different embedding function: {existing_name} vs {new_name}\n")
+-                        # Use the existing collection's embedding function to avoid conflicts
+-                        self.embedding_function = existing_ef
+-
++                self.collection = self.client.get_collection(
++                    name=self.collection_name,
++                    embedding_function=self.embedding_function
++                )
+             except Exception:
+-                # Collection doesn't exist, create it
+                 self.collection = self.client.create_collection(
+                     name=self.collection_name,
+                     embedding_function=self.embedding_function
+
+[STEP] Rebuild after patch 2026-02-14T14:48:26.2248811+08:00
+[CMD] Remove-Item -Recurse -Force C:\Users\28613\.config\zotero-mcp\chroma_db
+[CMD] update-db --fulltext --limit 20 --force-rebuild
+C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\chromadb\api\types.py:939: DeprecationWarning: The class OpenAIEmbeddingFunction does not implement get_config(). This will be required in a future version.
+  or self.get_config() is NotImplemented
+Scanning local Zotero database for items...
+Found 20 candidate items.
+Extracting content...
+Total items to index: 20
+Error upserting documents to ChromaDB: Connection error. in upsert.
+Error adding documents to ChromaDB: Connection error. in upsert.
+Processed: 10/20 added:0 skipped:0 errors:20
+Processed: 20/20 added:0 skipped:0 errors:20
+Using configuration: C:\Users\28613\.config\zotero-mcp\config.json
+Starting database update...
+Note: --fulltext flag enabled. Will extract content from local database if available.
+
+Database update completed:
+- Total items: 20
+- Processed: 20
+- Added: 0
+- Updated: 0
+- Skipped: 0
+- Errors: 20
+- Duration: 0:03:24.469711
+
+[STEP] Test embedding endpoint connectivity 2026-02-14T14:52:10.0769965+08:00
+[CMD] python -c openai embeddings test
+Traceback (most recent call last):
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpcore\_sync\connection.py", line 101, in handle_request
+    raise exc
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpcore\_sync\connection.py", line 78, in handle_request
+    stream = self._connect(request)
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpcore\_sync\connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpcore\_backends\sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Users\28613\AppData\Local\Programs\Python\Python310\lib\contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+BASE https://right.codes/codex/v1
+MODEL text-embedding-3-small
+APIConnectionError Connection error.
+httpcore.ConnectError: [WinError 10013] ��һ�ַ���Ȩ�޲������ķ�ʽ����һ�������׽��ֵĳ��ԡ�
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\openai\_base_client.py", line 1005, in request
+    response = self._client.send(
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Users\28613\AppData\Local\Programs\Python\Python310\lib\contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [WinError 10013] ��һ�ַ���Ȩ�޲������ķ�ʽ����һ�������׽��ֵĳ��ԡ�
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\openai\resources\embeddings.py", line 132, in create
+    return self._post(
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\openai\_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\openai\_base_client.py", line 1037, in request
+    raise APIConnectionError(request=request) from err
+openai.APIConnectionError: Connection error.
+
+[STEP] Inspect proxy/network env 2026-02-14T14:52:31.3321951+08:00
+[CMD] Env proxy vars
+
+[CMD] Test-NetConnection right.codes:443
+[CMD] netsh winhttp show proxy
+
+Current WinHTTP proxy settings:
+
+    Direct access (no proxy server).
+
+
+ComputerName     : right.codes
+RemoteAddress    : 104.18.255.252
+RemotePort       : 443
+TcpTestSucceeded : False
+
+
+
+[STEP] Compare target endpoints 2026-02-14T14:52:45.6441369+08:00
+[CMD] Test-NetConnection api.openai.com:443
+[CMD-RETRY] Test-NetConnection endpoints with longer timeout
+api.openai.com
+
+ComputerName     : api.openai.com
+RemoteAddress    : 2a03:2880:f131:83:face:b00c:0:25de
+RemotePort       : 443
+TcpTestSucceeded : False
+
+
+right.codes
+
+ComputerName     : right.codes
+RemoteAddress    : 104.18.255.252
+RemotePort       : 443
+TcpTestSucceeded : False
+
+
+
+[STEP] HTTP-level connectivity check 2026-02-14T14:53:39.2535697+08:00
+[CMD] Invoke-WebRequest right.codes/codex/v1/models
+[ERROR] System.Net.Http.HttpRequestException: 以一种访问权限不允许的方式做了一个访问套接字的尝试。 (right.codes:443)
+
+[STEP] Escalated connectivity test 2026-02-14T14:53:57.0832209+08:00
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\openai\resources\embeddings.py", line 132, in create
+    return self._post(
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\openai\_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\openai\_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.PermissionDeniedError: Your request was blocked.
+[STEP] Escalated HTTP diagnostics 2026-02-14T14:54:20.1829994+08:00
+[INFO] models status=200
+{"object":"list","source":"pricing_fallback","upstream":"Codex Team号池","data":[{"id":"gpt-5","object":"model","owned_by":"Codex Team号池","active":true,"rate":1,"price_config":{"input_price":1.25,"output_price":10,"cache_read_input_price":0.125,"cache_creation_input_price":0}},{"id":"gpt-5-codex","object":"model","owned_by":"Codex Team号池","active":true,"rate":1,"price_config":{"input_price":1.25,"output_price":10,"cache_read_input_price":0.125,"cache_creation_input_price":0}},{"id":"gpt-5-codex-mi
+[STEP] Check available embedding models 2026-02-14T14:54:41.5836844+08:00
+[INFO] model_count=18
+[INFO] embedding_models:
+
+[STEP] Call /embeddings directly for error body 2026-02-14T14:55:03.4033510+08:00
+[ERROR] status=400
+[STEP] Retry /embeddings with skip error check 2026-02-14T14:55:26.0396686+08:00
+[INFO] status=400
+{"error":"端点/codex未配置模型text-embedding-3-small"}
+
+
+[STEP] Validate key against official OpenAI endpoint 2026-02-14T14:55:53.7927125+08:00
+[CMD-RETRY] Check api.openai.com /models
+[ERROR] System.Threading.Tasks.TaskCanceledException: The request was canceled due to the configured HttpClient.Timeout of 35 seconds elapsing.
+
+[STEP] Probe alternate base path on gateway 2026-02-14T14:58:17.1124288+08:00
+[INFO] https://right.codes/v1/models -> 404
+{"timestamp":"2026-02-14T06:58:17.039+00:00","status":404,"error":"Not Found","message":"No static resource v1/models.","path":"/v1/models"}
+[INFO] https://right.codes/openai/v1/models -> 404
+{"timestamp":"2026-02-14T06:58:17.747+00:00","status":404,"error":"Not Found","message":"No static resource openai/v1/models.","path":"/openai/v1/models"}
+[INFO] https://right.codes/api/v1/models -> 404
+{"timestamp":"2026-02-14T06:58:18.449+00:00","status":404,"error":"Not Found","message":"No static resource api/v1/models.","path":"/api/v1/models"}
+
+[STEP] Final state snapshot 2026-02-14T14:58:58.5605585+08:00
+[CMD] git status --short
+ M src/zotero_mcp/chroma_client.py
+?? debug/
+[INFO] solution file: C:\Users\28613\.codex\solution.md
+[INFO] debug log: C:\Users\28613\Documents\GitHub\zotero-mcp\debug\run-20260214-144137.log

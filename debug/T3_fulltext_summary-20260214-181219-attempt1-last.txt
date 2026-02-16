@@ -1,0 +1,13 @@
+item_key: 2P33W7SZ
+
+**Problem**
+- CFD for parametric fluid flows is expensive, especially with sparse labeled data and changing geometries.
+
+**Method**
+- A physics-constrained, label-free DNN surrogate enforces initial/boundary conditions and minimizes Navier-Stokes residuals instead of fitting simulation labels.
+
+**Results**
+- Across pipe/stenosis/aneurysm cases, the surrogate matched CFD flow fields and uncertainty propagation with low reported test errors.
+
+**Limitations**
+- Evidence is limited to selected internal-flow benchmarks, and training still requires substantial GPU time.

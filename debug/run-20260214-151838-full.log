@@ -1,0 +1,218 @@
+[INFO] Full run started: 2026-02-14T15:18:38.7618573+08:00
+[INFO] Log file: C:\Users\28613\Documents\GitHub\zotero-mcp\debug\run-20260214-151838-full.log
+
+[STEP] Preflight checks 2026-02-14T15:18:53.7735232+08:00
+[CMD] Check Zotero process
+[INFO] No Zotero process running
+[CMD] Load env file (masked output)
+[INFO] OPENAI_BASE_URL=https://jeniya.top/v1
+[INFO] OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+[INFO] OPENAI_API_KEY=sk-5...wFKy
+[CMD] zotero-mcp version
+Zotero MCP v0.1.2
+
+[STEP] Connectivity validation 2026-02-14T15:19:26.9894938+08:00
+[CMD] GET https://jeniya.top/v1/models
+[INFO] models_status=200
+[INFO] models_total=2, contains_target=True
+[CMD] POST https://jeniya.top/v1/embeddings
+[INFO] embeddings_status=200
+[INFO] embeddings_ok=true dim=1536
+
+[STEP] Smoke indexing (20 items, fulltext) 2026-02-14T15:19:58.2481358+08:00
+[CMD] zotero-mcp update-db --fulltext --limit 20 --force-rebuild
+C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\chromadb\api\types.py:939: DeprecationWarning: The class OpenAIEmbeddingFunction does not implement get_config(). This will be required in a future version.
+  or self.get_config() is NotImplemented
+Scanning local Zotero database for items...
+Found 20 candidate items.
+Extracting content...
+Total items to index: 20
+Error upserting documents to ChromaDB: Error code: 429 - {'error': {'message': "This model's maximum context length is 8192 tokens, however you requested 11938 tokens (11938 in your prompt; 0 for the completion). Please reduce your prompt; or completion length. (request id: 20260214152456895053266cy1VZyCr)", 'type': 'invalid_request_error', 'param': '', 'code': None}} in upsert.
+Error adding documents to ChromaDB: Error code: 429 - {'error': {'message': "This model's maximum context length is 8192 tokens, however you requested 11938 tokens (11938 in your prompt; 0 for the completion). Please reduce your prompt; or completion length. (request id: 20260214152456895053266cy1VZyCr)", 'type': 'invalid_request_error', 'param': '', 'code': None}} in upsert.
+Processed: 10/20 added:0 skipped:0 errors:20
+Processed: 20/20 added:0 skipped:0 errors:20
+Using configuration: C:\Users\28613\.config\zotero-mcp\config.json
+Starting database update...
+Note: --fulltext flag enabled. Will extract content from local database if available.
+
+Database update completed:
+- Total items: 20
+- Processed: 20
+- Added: 0
+- Updated: 0
+- Skipped: 0
+- Errors: 20
+- Duration: 0:04:54.712449
+
+[STEP] Patched semantic_search payload clamp 2026-02-14T15:25:32.6509354+08:00
+[CMD] git diff -- src/zotero_mcp/semantic_search.py
+diff --git a/src/zotero_mcp/semantic_search.py b/src/zotero_mcp/semantic_search.py
+index f4163d0..ff9b285 100644
+--- a/src/zotero_mcp/semantic_search.py
++++ b/src/zotero_mcp/semantic_search.py
+@@ -651,6 +651,9 @@ class ZoteroSemanticSearch:
+         documents = []
+         metadatas = []
+         ids = []
++        # Keep payloads below stricter OpenAI-compatible embedding limits.
++        # This is a char-based guard (not token-accurate) but prevents common over-length failures.
++        max_embed_chars = 6000
+ 
+         for item in items:
+             try:
+@@ -669,6 +672,9 @@ class ZoteroSemanticSearch:
+                     stats["skipped"] += 1
+                     continue
+ 
++                if len(doc_text) > max_embed_chars:
++                    doc_text = doc_text[:max_embed_chars]
++
+                 documents.append(doc_text)
+                 metadatas.append(metadata)
+                 ids.append(item_key)
+@@ -809,4 +815,4 @@ def create_semantic_search(config_path: str | None = None, db_path: str | None =
+     Returns:
+         Configured ZoteroSemanticSearch instance
+     """
+-    return ZoteroSemanticSearch(config_path=config_path, db_path=db_path)
+\ No newline at end of file
++    return ZoteroSemanticSearch(config_path=config_path, db_path=db_path)
+
+[STEP] Re-run smoke after clamp patch 2026-02-14T15:26:04.6026472+08:00
+[CMD] zotero-mcp update-db --fulltext --limit 20 --force-rebuild
+C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\chromadb\api\types.py:939: DeprecationWarning: The class OpenAIEmbeddingFunction does not implement get_config(). This will be required in a future version.
+  or self.get_config() is NotImplemented
+Scanning local Zotero database for items...
+Found 20 candidate items.
+Extracting content...
+Total items to index: 20
+Processed: 10/20 added:20 skipped:0 errors:0
+Processed: 20/20 added:20 skipped:0 errors:0
+Using configuration: C:\Users\28613\.config\zotero-mcp\config.json
+Starting database update...
+Note: --fulltext flag enabled. Will extract content from local database if available.
+
+Database update completed:
+- Total items: 20
+- Processed: 20
+- Added: 20
+- Updated: 0
+- Skipped: 0
+- Errors: 0
+- Duration: 0:04:08.774806
+
+[STEP] Full indexing run (fulltext, force rebuild) 2026-02-14T15:31:04.5301895+08:00
+[CMD] zotero-mcp update-db --fulltext --force-rebuild
+C:\Users\28613\Documents\GitHub\zotero-mcp\.venv\lib\site-packages\chromadb\api\types.py:939: DeprecationWarning: The class OpenAIEmbeddingFunction does not implement get_config(). This will be required in a future version.
+  or self.get_config() is NotImplemented
+Scanning local Zotero database for items...
+Found 474 candidate items.
+Extracting content...
+Extracted content for 25/474 items (skipped 0 existing, updating 0)...
+Extracted content for 50/474 items (skipped 0 existing, updating 0)...
+Extracted content for 75/474 items (skipped 0 existing, updating 0)...
+Extracted content for 100/474 items (skipped 0 existing, updating 0)...
+Extracted content for 125/474 items (skipped 0 existing, updating 0)...
+Extracted content for 150/474 items (skipped 0 existing, updating 0)...
+Extracted content for 175/474 items (skipped 0 existing, updating 0)...
+Extracted content for 200/474 items (skipped 0 existing, updating 0)...
+Extracted content for 225/474 items (skipped 0 existing, updating 0)...
+Extracted content for 250/474 items (skipped 0 existing, updating 0)...
+Extracted content for 275/474 items (skipped 0 existing, updating 0)...
+Extracted content for 300/474 items (skipped 0 existing, updating 0)...
+Extracted content for 325/474 items (skipped 0 existing, updating 0)...
+Extracted content for 350/474 items (skipped 0 existing, updating 0)...
+Extracted content for 375/474 items (skipped 0 existing, updating 0)...
+Extracted content for 400/474 items (skipped 0 existing, updating 0)...
+Extracted content for 425/474 items (skipped 0 existing, updating 0)...
+Extracted content for 450/474 items (skipped 0 existing, updating 0)...
+Total items to index: 474
+Processed: 10/474 added:50 skipped:0 errors:0
+Processed: 20/474 added:50 skipped:0 errors:0
+Processed: 30/474 added:50 skipped:0 errors:0
+Processed: 40/474 added:50 skipped:0 errors:0
+Processed: 50/474 added:50 skipped:0 errors:0
+Processed: 60/474 added:100 skipped:0 errors:0
+Processed: 70/474 added:100 skipped:0 errors:0
+Processed: 80/474 added:100 skipped:0 errors:0
+Processed: 90/474 added:100 skipped:0 errors:0
+Processed: 100/474 added:100 skipped:0 errors:0
+Processed: 110/474 added:150 skipped:0 errors:0
+Processed: 120/474 added:150 skipped:0 errors:0
+Processed: 130/474 added:150 skipped:0 errors:0
+Processed: 140/474 added:150 skipped:0 errors:0
+Processed: 150/474 added:150 skipped:0 errors:0
+Processed: 160/474 added:200 skipped:0 errors:0
+Processed: 170/474 added:200 skipped:0 errors:0
+Processed: 180/474 added:200 skipped:0 errors:0
+Processed: 190/474 added:200 skipped:0 errors:0
+Processed: 200/474 added:200 skipped:0 errors:0
+Processed: 210/474 added:250 skipped:0 errors:0
+Processed: 220/474 added:250 skipped:0 errors:0
+Processed: 230/474 added:250 skipped:0 errors:0
+Processed: 240/474 added:250 skipped:0 errors:0
+Processed: 250/474 added:250 skipped:0 errors:0
+Processed: 260/474 added:300 skipped:0 errors:0
+Processed: 270/474 added:300 skipped:0 errors:0
+Processed: 280/474 added:300 skipped:0 errors:0
+Processed: 290/474 added:300 skipped:0 errors:0
+Processed: 300/474 added:300 skipped:0 errors:0
+Processed: 310/474 added:350 skipped:0 errors:0
+Processed: 320/474 added:350 skipped:0 errors:0
+Processed: 330/474 added:350 skipped:0 errors:0
+Processed: 340/474 added:350 skipped:0 errors:0
+Processed: 350/474 added:350 skipped:0 errors:0
+Processed: 360/474 added:400 skipped:0 errors:0
+Processed: 370/474 added:400 skipped:0 errors:0
+Processed: 380/474 added:400 skipped:0 errors:0
+Processed: 390/474 added:400 skipped:0 errors:0
+Processed: 400/474 added:400 skipped:0 errors:0
+Processed: 410/474 added:450 skipped:0 errors:0
+Processed: 420/474 added:450 skipped:0 errors:0
+Processed: 430/474 added:450 skipped:0 errors:0
+Processed: 440/474 added:450 skipped:0 errors:0
+Processed: 450/474 added:450 skipped:0 errors:0
+Processed: 460/474 added:474 skipped:0 errors:0
+Processed: 470/474 added:474 skipped:0 errors:0
+Using configuration: C:\Users\28613\.config\zotero-mcp\config.json
+Starting database update...
+Note: --fulltext flag enabled. Will extract content from local database if available.
+
+Database update completed:
+- Total items: 474
+- Processed: 474
+- Added: 474
+- Updated: 0
+- Skipped: 0
+- Errors: 0
+- Duration: 0:37:10.370302
+
+[STEP] Post-run validation 2026-02-14T16:08:47.3751654+08:00
+[CMD] zotero-mcp db-status
+=== Semantic Search Database Status ===
+Collection: zotero_library
+Document count: 474
+Embedding model: openai
+Database path: C:\Users\28613\.config\zotero-mcp\chroma_db
+
+Update configuration:
+- Auto update: False
+- Frequency: manual
+- Last update: 2026-02-14T16:08:20.051734
+- Should update: False
+[CMD] zotero-mcp db-inspect --limit 3
+[CMD-RETRY] zotero-mcp db-inspect --limit 3 2026-02-14T16:09:19.9592897+08:00
+=== Semantic DB Inspection ===
+Total documents: 474
+Showing up to: 3
+- Unstructured diffusion generative design of metamaterials for irregular design domains | Wang, Haoyu; Du, Zongliang; Tang, Shan; Mei, Yue; Li, Xiudong
+- Simulating the Collective Movement of Fish Schools | Vetemaa, Erik Martin
+Error inspecting database: 'gbk' codec can't encode character '\xe7' in position 460: illegal multibyte sequence
+
+[STEP] Final snapshot 2026-02-14T16:09:43.2910973+08:00
+[CMD] git status --short
+ M src/zotero_mcp/chroma_client.py
+ M src/zotero_mcp/semantic_search.py
+?? debug/
+[INFO] solution: C:\Users\28613\.codex\solution.md
+[INFO] debug log: C:\Users\28613\Documents\GitHub\zotero-mcp\debug\run-20260214-151838-full.log
